@@ -1,1 +1,55 @@
+---
+- name: Install and Set Up SonarQube
+  hosts: all
+  become: yes
+
+  vars:
+    sonarqube_version: "9.4.0.54424"
+    sonarqube_user: "sonarqube"
+    sonarqube_group: "sonarqube"
+    sonarqube_home: "/home/{{ sonarqube_user }}/sonarqube-{{ sonarqube_version }}"
+
+  tasks:
+    - name: Update APT package index
+      apt:
+        update_cache: yes
+
+    - name: Install unzip package
+      apt:
+        name: unzip
+        state: present
+
+    - name: Add SonarQube user
+      user:
+        name: "{{ sonarqube_user }}"
+        shell: /bin/bash
+        create_home: yes
+
+    - name: Download SonarQube
+      become_user: "{{ sonarqube_user }}"
+      get_url:
+        url: "https://binaries.sonarsource.com/Distribution/sonarqube/sonarqube-{{ sonarqube_version }}.zip"
+        dest: "/home/{{ sonarqube_user }}/sonarqube-{{ sonarqube_version }}.zip"
+
+    - name: Unzip SonarQube
+      become_user: "{{ sonarqube_user }}"
+      unarchive:
+        src: "/home/{{ sonarqube_user }}/sonarqube-{{ sonarqube_version }}.zip"
+        dest: "/home/{{ sonarqube_user }}/"
+        remote_src: yes
+
+    - name: Set permissions for SonarQube directory
+      file:
+        path: "{{ sonarqube_home }}"
+        state: directory
+        owner: "{{ sonarqube_user }}"
+        group: "{{ sonarqube_group }}"
+        mode: "0755"
+        recurse: yes
+
+    - name: Start SonarQube
+      become_user: "{{ sonarqube_user }}"
+      shell: |
+        cd {{ sonarqube_home }}/bin/linux-x86-64/
+        ./sonar.sh start
 
