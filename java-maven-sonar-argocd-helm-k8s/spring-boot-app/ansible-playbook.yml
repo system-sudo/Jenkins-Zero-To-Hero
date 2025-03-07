@@ -1,5 +1,5 @@
 ---
-- name: Install Docker and SonarQube
+- name: Install Docker, SonarQube, and Configure User Access
   hosts: all
   become: yes
 
@@ -46,14 +46,27 @@
         state: started
         enabled: yes
 
-    # Step 5: Pull SonarQube Docker image
+    # Step 5: Add ubuntu and jenkins to the Docker group
+    - name: Add ubuntu user to Docker group
+      user:
+        name: ubuntu
+        groups: docker
+        append: yes
+
+    - name: Add jenkins user to Docker group
+      user:
+        name: jenkins
+        groups: docker
+        append: yes
+
+    # Step 6: Pull SonarQube Docker image
     - name: Pull SonarQube Docker image
       docker_image:
         name: sonarqube
         tag: "{{ sonarqube_version }}"
         source: pull
 
-    # Step 6: Run SonarQube container
+    # Step 7: Run SonarQube container
     - name: Start SonarQube container
       docker_container:
         name: sonarqube
