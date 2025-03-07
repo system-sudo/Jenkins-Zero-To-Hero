@@ -1,0 +1,65 @@
+---
+- name: Install Docker and SonarQube
+  hosts: all
+  become: yes
+
+  vars:
+    sonarqube_version: "latest"
+    sonarqube_port: 9000
+
+  tasks:
+    # Step 1: Update the package manager
+    - name: Update apt packages
+      apt:
+        update_cache: yes
+
+    # Step 2: Install prerequisites for Docker
+    - name: Install prerequisites for Docker
+      apt:
+        name:
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - software-properties-common
+        state: present
+
+    # Step 3: Add Docker's official GPG key and repository
+    - name: Add Docker GPG key
+      apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        state: present
+
+    - name: Add Docker repository
+      apt_repository:
+        repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
+        state: present
+
+    # Step 4: Install Docker
+    - name: Install Docker
+      apt:
+        name: docker-ce
+        state: present
+
+    - name: Ensure Docker service is running
+      service:
+        name: docker
+        state: started
+        enabled: yes
+
+    # Step 5: Pull SonarQube Docker image
+    - name: Pull SonarQube Docker image
+      docker_image:
+        name: sonarqube
+        tag: "{{ sonarqube_version }}"
+        source: pull
+
+    # Step 6: Run SonarQube container
+    - name: Start SonarQube container
+      docker_container:
+        name: sonarqube
+        image: sonarqube:{{ sonarqube_version }}
+        state: started
+        ports:
+          - "9000:{{ sonarqube_port }}"
+        volumes:
+          - /opt/sonarqube_data:/opt/sonarqube_data
