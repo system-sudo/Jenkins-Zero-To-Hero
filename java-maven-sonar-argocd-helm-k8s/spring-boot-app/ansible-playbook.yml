@@ -1,5 +1,5 @@
 ---
-- name: Install Docker, SonarQube, and Configure User Access
+- name: Install Docker, SonarQube, Git, and Configure User Access
   hosts: all
   become: yes
 
@@ -13,7 +13,13 @@
       apt:
         update_cache: yes
 
-    # Step 2: Install prerequisites for Docker
+    # Step 2: Install Git
+    - name: Install Git
+      apt:
+        name: git
+        state: present
+
+    # Step 3: Install prerequisites for Docker
     - name: Install prerequisites for Docker
       apt:
         name:
@@ -23,7 +29,7 @@
           - software-properties-common
         state: present
 
-    # Step 3: Add Docker's official GPG key and repository
+    # Step 4: Add Docker's official GPG key and repository
     - name: Add Docker GPG key
       apt_key:
         url: https://download.docker.com/linux/ubuntu/gpg
@@ -34,7 +40,7 @@
         repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
         state: present
 
-    # Step 4: Install Docker
+    # Step 5: Install Docker
     - name: Install Docker
       apt:
         name: docker-ce
@@ -46,7 +52,7 @@
         state: started
         enabled: yes
 
-    # Step 5: Add ubuntu and jenkins to the Docker group
+    # Step 6: Add ubuntu and jenkins to the Docker group
     - name: Add ubuntu user to Docker group
       user:
         name: ubuntu
@@ -59,14 +65,14 @@
         groups: docker
         append: yes
 
-    # Step 6: Pull SonarQube Docker image
+    # Step 7: Pull SonarQube Docker image
     - name: Pull SonarQube Docker image
       docker_image:
         name: sonarqube
         tag: "{{ sonarqube_version }}"
         source: pull
 
-    # Step 7: Run SonarQube container
+    # Step 8: Run SonarQube container
     - name: Start SonarQube container
       docker_container:
         name: sonarqube
