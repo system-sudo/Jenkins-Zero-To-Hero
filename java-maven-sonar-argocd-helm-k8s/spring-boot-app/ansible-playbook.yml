@@ -6,6 +6,8 @@
   vars:
     sonarqube_version: "latest"
     sonarqube_port: 9000
+    git_user_name: "Your Name"  # Replace with your Git username
+    git_user_email: "your-email@example.com"  # Replace with your Git email
 
   tasks:
     # Step 1: Update the package manager
@@ -19,7 +21,14 @@
         name: git
         state: present
 
-    # Step 3: Install prerequisites for Docker
+    # Step 3: Configure Git
+    - name: Set Git user name
+      command: git config --global user.name "{{ git_user_name }}"
+
+    - name: Set Git user email
+      command: git config --global user.email "{{ git_user_email }}"
+
+    # Step 4: Install prerequisites for Docker
     - name: Install prerequisites for Docker
       apt:
         name:
@@ -29,7 +38,7 @@
           - software-properties-common
         state: present
 
-    # Step 4: Add Docker's official GPG key and repository
+    # Step 5: Add Docker's official GPG key and repository
     - name: Add Docker GPG key
       apt_key:
         url: https://download.docker.com/linux/ubuntu/gpg
@@ -40,7 +49,7 @@
         repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
         state: present
 
-    # Step 5: Install Docker
+    # Step 6: Install Docker
     - name: Install Docker
       apt:
         name: docker-ce
@@ -52,7 +61,7 @@
         state: started
         enabled: yes
 
-    # Step 6: Add ubuntu and jenkins to the Docker group
+    # Step 7: Add ubuntu and jenkins to the Docker group
     - name: Add ubuntu user to Docker group
       user:
         name: ubuntu
@@ -65,14 +74,14 @@
         groups: docker
         append: yes
 
-    # Step 7: Pull SonarQube Docker image
+    # Step 8: Pull SonarQube Docker image
     - name: Pull SonarQube Docker image
       docker_image:
         name: sonarqube
         tag: "{{ sonarqube_version }}"
         source: pull
 
-    # Step 8: Run SonarQube container
+    # Step 9: Run SonarQube container
     - name: Start SonarQube container
       docker_container:
         name: sonarqube
